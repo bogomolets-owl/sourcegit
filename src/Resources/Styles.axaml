@@ -1309,4 +1309,14 @@
       <Setter Property="IsVisible" Value="False"/>
     </Style>
   </Style>
+  
+  <Style Selector="SplitButton.commit_only">
+    <Setter Property="Content" Value="{DynamicResource Text.WorkingCopy.Commit}"/>
+  </Style>
+  <Style Selector="SplitButton.commit_push">
+    <Setter Property="Content" Value="{DynamicResource Text.WorkingCopy.CommitAndPush}"/>
+  </Style>
+  <Style Selector="SplitButton.commit_pupu">
+    <Setter Property="Content" Value="{DynamicResource Text.WorkingCopy.CommitWithPullPush}"/>
+  </Style>
 </Styles>

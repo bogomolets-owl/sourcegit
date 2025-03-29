@@ -279,50 +279,28 @@
                        IsVisible="{Binding IsCommitting}"/>
 
         <SplitButton Grid.Column="6"
-                     Content="{DynamicResource Text.Repository.Continue}"
+                     Classes.commit_only="{Binding SelectedCommitAction, Converter={x:Static c:CommitActionConverters.IsCommitOnly}}"
+                     Classes.commit_push="{Binding SelectedCommitAction, Converter={x:Static c:CommitActionConverters.IsCommitWithPush}}"
+                     Classes.commit_pupu="{Binding SelectedCommitAction, Converter={x:Static c:CommitActionConverters.IsCommitWithPullPush}}"
                      Height="28"
                      Margin="8,0,0,0"
                      Padding="8,0"
-                     Command="{Binding ContinueMerge}"
-                     IsVisible="{Binding InProgressContext, Converter={x:Static ObjectConverters.IsNotNull}}">
-          <SplitButton.IsEnabled>
-            <MultiBinding Converter="{x:Static BoolConverters.And}">
-              <Binding Path="IsCommitting" Converter="{x:Static BoolConverters.Not}"/>
-              <Binding Path="HasUnsolvedConflicts" Converter="{x:Static BoolConverters.Not}"/>
-            </MultiBinding>
-          </SplitButton.IsEnabled>
+                     Command="{Binding ExecuteSelectedCommitAction}"
+                     IsEnabled="{Binding !IsCommitting}">
           <SplitButton.Flyout>
             <MenuFlyout>
-              <MenuItem Header="{DynamicResource Text.WorkingCopy.CommitToEdit}" Command="{Binding Commit}"/>
+              <MenuItem Header="{DynamicResource Text.WorkingCopy.Commit}"
+                        Command="{Binding OnSelectCommitAction}"
+                        CommandParameter="{x:Static vm:CommitAction.Commit}"/>
+              <MenuItem Header="{DynamicResource Text.WorkingCopy.CommitAndPush}"
+                        Command="{Binding OnSelectCommitAction}"
+                        CommandParameter="{x:Static vm:CommitAction.CommitWithPush}"/>
+              <MenuItem Header="{DynamicResource Text.WorkingCopy.CommitWithPullPush}"
+                        Command="{Binding OnSelectCommitAction}"
+                        CommandParameter="{x:Static vm:CommitAction.CommitWithPullPush}"/>
             </MenuFlyout>
           </SplitButton.Flyout>
         </SplitButton>
-
-        <Button Grid.Column="6"
-                Classes="flat primary"
-                Content="{DynamicResource Text.WorkingCopy.Commit}"
-                Height="28"
-                Margin="8,0,0,0"
-                Padding="8,0"
-                Command="{Binding Commit}"
-                HotKey="{OnPlatform Ctrl+Enter, macOS=⌘+Enter}"
-                IsVisible="{Binding InProgressContext, Converter={x:Static ObjectConverters.IsNull}}"
-                IsEnabled="{Binding !IsCommitting}"
-                ToolTip.Placement="Top"
-                ToolTip.VerticalOffset="0">
-          <ToolTip.Tip>
-            <StackPanel Orientation="Vertical">
-              <TextBlock TextAlignment="Left" TextWrapping="Wrap">
-                <Run Text="{OnPlatform Ctrl+Enter, macOS=⌘+Enter}"/>
-                <Run Foreground="{DynamicResource Brush.FG2}" Text="{DynamicResource Text.WorkingCopy.CommitTip}"/>
-              </TextBlock>
-              <TextBlock TextAlignment="Left" TextWrapping="Wrap" Margin="0,4,0,0">
-                <Run Text="{OnPlatform Ctrl+Shift+Enter, macOS=⌘+⇧+Enter}"/>
-                <Run Foreground="{DynamicResource Brush.FG2}" Text="{DynamicResource Text.WorkingCopy.CommitWithAutoStage}"/>
-              </TextBlock>
-            </StackPanel>
-          </ToolTip.Tip>
-        </Button>
 
         <!-- Invisible button just to add another hotkey `Ctrl+Shift+Enter` to commit with auto-stage -->
         <Button Grid.Column="7"
@@ -331,27 +309,6 @@
                 Command="{Binding CommitWithAutoStage}"
                 HotKey="{OnPlatform Ctrl+Shift+Enter, macOS=⌘+Shift+Enter}"
                 IsEnabled="{Binding !IsCommitting}"/>
-
-        <Button Grid.Column="8"
-                Classes="flat"
-                Content="{DynamicResource Text.WorkingCopy.CommitAndPush}"
-                Height="28"
-                Margin="8,0,0,0"
-                Padding="8,0"
-                Command="{Binding CommitWithPush}"
-                HotKey="Alt+Enter"
-                IsEnabled="{Binding !IsCommitting}"
-                ToolTip.Tip="{OnPlatform Alt+Enter, macOS=⌥+Enter}"
-                ToolTip.Placement="Top"
-                ToolTip.VerticalOffset="0">
-          <Button.IsVisible>
-            <MultiBinding Converter="{x:Static BoolConverters.And}">
-              <Binding Path="HasRemotes"/>
-              <Binding Path="UseAmend" Converter="{x:Static BoolConverters.Not}"/>
-              <Binding Path="InProgressContext" Converter="{x:Static ObjectConverters.IsNull}"/>
-            </MultiBinding>
-          </Button.IsVisible>
-        </Button>
       </Grid>
     </Grid>
   </Grid>

@@ -742,4 +742,5 @@
   <x:String x:Key="Text.Worktree.Lock" xml:space="preserve">Lock</x:String>
   <x:String x:Key="Text.Worktree.Remove" xml:space="preserve">Remove</x:String>
   <x:String x:Key="Text.Worktree.Unlock" xml:space="preserve">Unlock</x:String>
+  <x:String x:Key="Text.WorkingCopy.CommitWithPullPush" xml:space="preserve">COMMIT &amp; SYNC</x:String>
 </ResourceDictionary>

@@ -224,6 +224,8 @@ namespace SourceGit.Models
             set;
         } = [];
 
+        public string SelectedCommitAction { get; set; }
+
         public Dictionary<string, FilterMode> CollectHistoriesFilters()
         {
             var map = new Dictionary<string, FilterMode>();

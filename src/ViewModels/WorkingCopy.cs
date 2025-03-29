@@ -2,15 +2,33 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-
+using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace SourceGit.ViewModels
 {
+    [Flags]
+    public enum CommitBehaviourFlags
+    {
+        None = 0,
+        AllowEmpty = 1 << 0,
+        Stage = 1 << 1,
+        Pull = 1 << 2,
+        Push = 1 << 3,
+    }
+    
+    public enum CommitAction
+    {
+        Commit,
+        CommitWithPush,
+        CommitWithPullPush,
+    }
+    
     public class WorkingCopy : ObservableObject
     {
         public bool IncludeUntracked
@@ -197,9 +215,22 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _commitMessage, value);
         }
 
+        public CommitAction SelectedCommitAction
+        {
+            get => _selectedCommitAction;
+            set  {
+                SetProperty( ref _selectedCommitAction, value);
+                _repo.Settings.SelectedCommitAction = value.ToString();
+            }
+        }
+
         public WorkingCopy(Repository repo)
         {
             _repo = repo;
+            if (Enum.TryParse<CommitAction>(repo.Settings.SelectedCommitAction, out var selectedCommitAction))
+            {
+                _selectedCommitAction = selectedCommitAction;
+            }
         }
 
         public void Cleanup()
@@ -522,25 +553,39 @@ namespace SourceGit.ViewModels
                 IsCommitting = false;
             }
         }
-
-        public void Commit()
+        
+        public void ExecuteSelectedCommitAction()
         {
-            DoCommit(false, false, false);
+            switch (SelectedCommitAction)
+            {
+                case CommitAction.Commit:
+                    DoCommit(CommitBehaviourFlags.None);
+                    break;
+                case CommitAction.CommitWithPush:
+                    DoCommit(CommitBehaviourFlags.Push);
+                    break;
+                case CommitAction.CommitWithPullPush:
+                    DoCommit(CommitBehaviourFlags.Pull|CommitBehaviourFlags.Push);
+                    break;
+            }
+        }
+        
+        public void OnSelectCommitAction(CommitAction newCommitAction)
+        {
+            SelectedCommitAction = newCommitAction;
         }
 
         public void CommitWithAutoStage()
         {
-            DoCommit(true, false, false);
-        }
-
-        public void CommitWithPush()
-        {
-            DoCommit(false, true, false);
+            DoCommit(CommitBehaviourFlags.Stage);
         }
 
         public void CommitWithoutFiles(bool autoPush)
         {
-            DoCommit(false, autoPush, true);
+            var push = autoPush
+                ? CommitBehaviourFlags.Push
+                : CommitBehaviourFlags.None;
+            DoCommit(CommitBehaviourFlags.AllowEmpty|push);
         }
 
         public ContextMenu CreateContextMenuForUnstagedChanges()
@@ -1642,7 +1687,7 @@ namespace SourceGit.ViewModels
                 DetailContext = new DiffContext(_repo.FullPath, new Models.DiffOption(change, isUnstaged), _detailContext as DiffContext);
         }
 
-        private void DoCommit(bool autoStage, bool autoPush, bool allowEmpty)
+        private void DoCommit(CommitBehaviourFlags behaviour)
         {
             if (!_repo.CanCreatePopup())
             {
@@ -1655,6 +1700,11 @@ namespace SourceGit.ViewModels
                 App.RaiseException(_repo.FullPath, "Commit without message is NOT allowed!");
                 return;
             }
+            
+            var allowEmpty = behaviour.HasFlag(CommitBehaviourFlags.AllowEmpty);
+            var autoPush = behaviour.HasFlag(CommitBehaviourFlags.Push);
+            var autoStage = behaviour.HasFlag(CommitBehaviourFlags.Stage);
+            var autoPull = behaviour.HasFlag(CommitBehaviourFlags.Pull);
 
             if (!_useAmend && !allowEmpty)
             {
@@ -1688,8 +1738,10 @@ namespace SourceGit.ViewModels
                     {
                         CommitMessage = string.Empty;
                         UseAmend = false;
-
-                        if (autoPush)
+                        
+                        if (autoPull && autoPush)
+                            _repo.ShowAndStartPopup(new Sync(_repo, null));
+                        else if (autoPush)
                             _repo.ShowAndStartPopup(new Push(_repo, null));
                     }
 
@@ -1735,6 +1787,7 @@ namespace SourceGit.ViewModels
         private object _detailContext = null;
         private string _unstagedFilter = string.Empty;
         private string _commitMessage = string.Empty;
+        private CommitAction _selectedCommitAction = CommitAction.Commit;
 
         private bool _hasUnsolvedConflicts = false;
         private InProgressContext _inProgressContext = null;
