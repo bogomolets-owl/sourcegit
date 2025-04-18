@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace SourceGit.ViewModels
@@ -8,6 +8,7 @@ namespace SourceGit.ViewModels
     public class ChangeTreeNode : ObservableObject
     {
         public string FullPath { get; set; }
+        public string FilePath { get; set; } = "";
         public int Depth { get; private set; } = 0;
         public Models.Change Change { get; set; } = null;
         public List<ChangeTreeNode> Children { get; set; } = new List<ChangeTreeNode>();
@@ -26,6 +27,7 @@ namespace SourceGit.ViewModels
         public ChangeTreeNode(Models.Change c, int depth)
         {
             FullPath = c.Path;
+            FilePath = c.FilePath;
             Depth = depth;
             Change = c;
             IsExpanded = false;

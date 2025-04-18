@@ -33,8 +33,15 @@ namespace SourceGit.Models
         public ChangeState Index { get; set; } = ChangeState.None;
         public ChangeState WorkTree { get; set; } = ChangeState.None;
         public string Path { get; set; } = "";
+        public string FilePath { get; set; } = "";
         public string OriginalPath { get; set; } = "";
         public ChangeDataForAmend DataForAmend { get; set; } = null;
+
+        public Change(string repo, string path)
+        {
+            Path = path;
+            FilePath = System.IO.Path.Combine(repo, path);
+        }
 
         public bool IsConflit
         {

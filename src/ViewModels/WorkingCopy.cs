@@ -6,9 +6,11 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.Media; // Add this line
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SourceGit.Converters;
 
 namespace SourceGit.ViewModels
 {
@@ -1517,6 +1519,11 @@ namespace SourceGit.ViewModels
             return menu;
         }
 
+        public IImage GetFileIcon(string filePath)
+        {
+            return FileIconHelper.GetFileIcon(filePath);
+        }
+
         private List<Models.Change> GetVisibleUnstagedChanges(List<Models.Change> unstaged)
         {
             if (string.IsNullOrEmpty(_unstagedFilter))
@@ -1740,7 +1747,10 @@ namespace SourceGit.ViewModels
                         UseAmend = false;
                         
                         if (autoPull && autoPush)
-                            _repo.ShowAndStartPopup(new Sync(_repo, null));
+                        {
+                            // _repo.ShowAndStartPopup(new Sync(_repo, null));
+                            _repo.ShowAndStartPopup(new Push(_repo, null));
+                        }
                         else if (autoPush)
                             _repo.ShowAndStartPopup(new Push(_repo, null));
                     }
@@ -1793,3 +1803,5 @@ namespace SourceGit.ViewModels
         private InProgressContext _inProgressContext = null;
     }
 }
+
+

@@ -119,7 +119,8 @@
                                 SelectedChanges="{Binding SelectedUnstaged, Mode=TwoWay}"
                                 ContextRequested="OnUnstagedContextRequested"
                                 ChangeDoubleTapped="OnUnstagedChangeDoubleTapped"
-                                KeyDown="OnUnstagedKeyDown"/>
+                                KeyDown="OnUnstagedKeyDown">
+        </v:ChangeCollectionView>
       </Grid>
 
       <!-- Splitter -->

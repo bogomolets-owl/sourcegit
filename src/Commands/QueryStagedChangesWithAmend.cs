@@ -30,9 +30,8 @@ namespace SourceGit.Commands
                     var match = REG_FORMAT2().Match(line);
                     if (match.Success)
                     {
-                        var change = new Models.Change()
+                        var change = new Models.Change(WorkingDirectory, match.Groups[3].Value)
                         {
-                            Path = match.Groups[3].Value,
                             DataForAmend = new Models.ChangeDataForAmend()
                             {
                                 FileMode = match.Groups[1].Value,
@@ -47,9 +46,8 @@ namespace SourceGit.Commands
                     match = REG_FORMAT1().Match(line);
                     if (match.Success)
                     {
-                        var change = new Models.Change()
+                        var change = new Models.Change(WorkingDirectory, match.Groups[4].Value)
                         {
-                            Path = match.Groups[4].Value,
                             DataForAmend = new Models.ChangeDataForAmend()
                             {
                                 FileMode = match.Groups[1].Value,

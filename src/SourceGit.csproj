@@ -30,6 +30,18 @@
     <DefineConstants>$(DefineConstants);DISABLE_UPDATE_DETECTION</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$([MSBuild]::IsOSPlatform(&quot;Windows&quot;))'">
+    <DefineConstants>$(DefineConstants);__WINDOWS__</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform(&quot;Linux&quot;))">
+    <DefineConstants>$(DefineConstants);__LINUX__</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform(&quot;OSX&quot;))">
+    <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <AvaloniaResource Include="App.ico" />
     <AvaloniaResource Include="Resources/Fonts/*" />
@@ -54,6 +66,18 @@
     <PackageReference Include="OpenAI" Version="2.2.0-beta.4" />
     <PackageReference Include="TextMateSharp" Version="1.0.66" />
     <PackageReference Include="TextMateSharp.Grammars" Version="1.0.66" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <PackageReference Include="Xamarin.Mac" Version="7.4.0.13" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <PackageReference Include="GLib" Version="2.70.0" />
   </ItemGroup>
 
   <ItemGroup>

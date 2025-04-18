@@ -33,7 +33,7 @@ namespace SourceGit.Commands
                 if (!match.Success)
                     continue;
 
-                var change = new Models.Change() { Path = match.Groups[2].Value };
+                var change = new Models.Change(WorkingDirectory, match.Groups[2].Value);
                 var status = match.Groups[1].Value;
 
                 switch (status[0])

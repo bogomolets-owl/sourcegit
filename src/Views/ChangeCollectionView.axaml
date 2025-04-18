@@ -36,7 +36,7 @@
                                    SelectionChanged="OnRowSelectionChanged">
         <ListBox.ItemTemplate>
           <DataTemplate DataType="vm:ChangeTreeNode">
-            <Grid ColumnDefinitions="16,Auto,Auto,*"
+            <Grid ColumnDefinitions="16,Auto,Auto,Auto,*"
                   Margin="{Binding Depth, Converter={x:Static c:IntConverters.ToTreeMargin}}"
                   Background="Transparent"
                   DoubleTapped="OnRowDoubleTapped"
@@ -58,7 +58,8 @@
                             IsVisible="{Binding IsFolder}"/>
 
               <v:ChangeStatusIcon Grid.Column="1" Width="14" Height="14" IsUnstagedChange="{Binding #ThisControl.IsUnstagedChange}" Change="{Binding Change}" IsVisible="{Binding !IsFolder}"/>
-              <TextBlock Grid.Column="2" Classes="primary" Text="{Binding FullPath, Converter={x:Static c:PathConverters.PureFileName}}" Margin="6,0,0,0"/>
+              <Image Grid.Column="2" Source="{Binding Path=FilePath, Converter={StaticResource FileIconConverter}}" Width="14" Height="14" Margin="4,0,0,0" IsVisible="{Binding !IsFolder}"/>
+              <TextBlock Grid.Column="3" Classes="primary" Text="{Binding FullPath, Converter={x:Static c:PathConverters.PureFileName}}" Margin="4,0,0,0"/>
             </Grid>
           </DataTemplate>
         </ListBox.ItemTemplate>
@@ -81,13 +82,18 @@
                                   Margin="4,0,0,0"
                                   IsUnstagedChange="{Binding #ThisControl.IsUnstagedChange}"
                                   Change="{Binding}" />
+              
+              <Image Grid.Column="1" 
+                     Source="{Binding Path=FilePath, Converter={StaticResource FileIconConverter}}" 
+                     Width="14" Height="14" 
+                     Margin="4,0,0,0"/>
 
-              <TextBlock Grid.Column="1"
+              <TextBlock Grid.Column="2"
                          Classes="primary"
                          Text="{Binding Path, Converter={x:Static c:PathConverters.PureFileName}}"
                          Margin="4,0"/>
-
-              <TextBlock Grid.Column="2"
+              
+              <TextBlock Grid.Column="3"
                          Classes="primary"
                          Text="{Binding Path, Converter={x:Static c:PathConverters.PureDirectoryName}}"
                          Foreground="{DynamicResource Brush.FG2}"/>
@@ -104,7 +110,7 @@
                                    SelectionChanged="OnRowSelectionChanged">
         <ListBox.ItemTemplate>
           <DataTemplate DataType="m:Change">
-            <Grid ColumnDefinitions="Auto,Auto,*"
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*"
                   Background="Transparent"
                   DoubleTapped="OnRowDoubleTapped"
                   ToolTip.Tip="{Binding Path}">
@@ -113,8 +119,13 @@
                                   Margin="4,0,0,0"
                                   IsUnstagedChange="{Binding #ThisControl.IsUnstagedChange}"
                                   Change="{Binding}" />
+              
+              <Image Grid.Column="1" 
+                     Source="{Binding Path=FilePath, Converter={StaticResource FileIconConverter}}" 
+                     Width="14" Height="14" 
+                     Margin="4,0,0,0"/>
 
-              <TextBlock Grid.Column="1"
+              <TextBlock Grid.Column="2"
                          Classes="primary"
                          Text="{Binding Path}"
                          Margin="4,0"/>

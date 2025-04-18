@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace SourceGit.ViewModels
@@ -7,30 +5,24 @@ namespace SourceGit.ViewModels
     public class Sync : Popup
     {
         private readonly Repository _repo;
-        private Models.Branch _selectedLocalBranch;
-        private Models.Remote _selectedRemote;
-        private Models.Branch _selectedRemoteBranch;
-        private bool _isSetTrackOptionVisible;
-        private bool _tracking = true;
-        private bool _checkSubmodules = true;
-        private bool _forcePush;
+        private readonly Models.Branch _selectedLocalBranch;
+        private readonly Models.Remote _selectedRemote;
+        private readonly Models.Branch _selectedRemoteBranch;
+        private readonly int _retryCount;
 
-        public Sync(Repository repo, Models.Branch localBranch)
+        public Sync(Repository repo, Models.Branch localBranch, Models.Remote remote, Models.Branch remoteBranch, int retryCount = 3)
         {
             _repo = repo;
-            // Initialize Pull and Push components
-            PullComponent = new Pull(repo, null);
-            PushComponent = new Push(repo, localBranch);
+            _selectedLocalBranch = localBranch;
+            _selectedRemote = remote;
+            _selectedRemoteBranch = remoteBranch;
+            _retryCount = retryCount;
         }
-
-        public Pull PullComponent { get; }
-        public Push PushComponent { get; }
 
         public override async Task<bool> Sure()
         {
             _repo.SetWatcherEnabled(false);
 
-            // Stash local changes
             var changes = new Commands.CountLocalChangesWithoutUntracked(_repo.FullPath).Result();
             var needPopStash = false;
             if (changes > 0)
@@ -45,41 +37,76 @@ namespace SourceGit.ViewModels
                 needPopStash = true;
             }
 
-            // Perform Pull
-            var pullSuccess = await PullComponent.Sure();
-            if (!pullSuccess)
+            for (int i = 0; i < _retryCount; i++)
             {
-                CallUIThread(() => _repo.SetWatcherEnabled(true));
-                return false;
-            }
-
-            // Perform Push
-            var pushSuccess = await PushComponent.Sure();
-            if (!pushSuccess)
-            {
-                CallUIThread(() => _repo.SetWatcherEnabled(true));
-                return false;
-            }
-
-            // Re-apply stashed changes if any
-            if (needPopStash)
-            {
-                SetProgressDescription("Re-apply local changes...");
-                var popSuccess = new Commands.Stash(_repo.FullPath).Pop("stash@{0}");
-                if (!popSuccess)
+                var pullSuccess = await PerformPull();
+                if (!pullSuccess)
                 {
                     CallUIThread(() => _repo.SetWatcherEnabled(true));
                     return false;
                 }
+
+                var pushSuccess = await PerformPush();
+                if (pushSuccess)
+                {
+                    if (needPopStash)
+                    {
+                        SetProgressDescription("Re-apply local changes...");
+                        var popSuccess = new Commands.Stash(_repo.FullPath).Pop("stash@{0}");
+                        if (!popSuccess)
+                        {
+                            CallUIThread(() => _repo.SetWatcherEnabled(true));
+                            return false;
+                        }
+                    }
+
+                    CallUIThread(() => _repo.SetWatcherEnabled(true));
+                    return true;
+                }
             }
 
             CallUIThread(() => _repo.SetWatcherEnabled(true));
-            return true;
+            return false;
         }
 
-        public override bool CanStartDirectly()
+        private Task<bool> PerformPull()
         {
-            return PullComponent.CanStartDirectly() && PushComponent.CanStartDirectly();
+            return Task.Run(() =>
+            {
+                SetProgressDescription($"Pull {_selectedRemote.Name}/{_selectedRemoteBranch.Name}...");
+                var rs = new Commands.Pull(
+                    _repo.FullPath,
+                    _selectedRemote.Name,
+                    _selectedRemoteBranch.Name,
+                    true, // Use rebase
+                    _repo.Settings.FetchWithoutTagsOnPull,
+                    SetProgressDescription).Exec();
+
+                CallUIThread(() => _repo.SetWatcherEnabled(true));
+                return rs;
+            });
+        }
+
+        private Task<bool> PerformPush()
+        {
+            return Task.Run(() =>
+            {
+                var remoteBranchName = _selectedRemoteBranch.Name;
+                SetProgressDescription($"Push {_selectedLocalBranch.Name} -> {_selectedRemote.Name}/{remoteBranchName} ...");
+
+                var succ = new Commands.Push(
+                    _repo.FullPath,
+                    _selectedLocalBranch.Name,
+                    _selectedRemote.Name,
+                    remoteBranchName,
+                    _repo.Settings.PushAllTags,
+                    false, // No submodules check
+                    false, // No tracking
+                    false, // No force push
+                    SetProgressDescription).Exec();
+                CallUIThread(() => _repo.SetWatcherEnabled(true));
+                return succ;
+            });
         }
     }
 }
